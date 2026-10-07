@@ -207,196 +207,53 @@ PGC_LAB02/
 
 ---
 
-## How to Reproduce the Entire Experiment (Step-by-Step Guide)
+## How to Clone and Run
 
-Follow this exact guide to replicate all benchmark results, verify synchronization behaviors, and regenerate the analytical charts on your own machine.
-
-### Prerequisites & Environment Setup
-
-The benchmarks are designed for Linux (Ubuntu 20.04/22.04 LTS or **Windows Subsystem for Linux — WSL2**).
-
-1. **Launch Terminal / WSL:**
-   On Windows, open PowerShell and type:
-   ```bash
-   wsl
-   ```
-
-2. **Install Required Build Tools & Python Libraries:**
-   ```bash
-   sudo apt update
-   sudo apt install -y build-essential gcc git python3 python3-pip python3-matplotlib python3-numpy
-   ```
-
-3. **Verify GCC & OpenMP Support:**
-   ```bash
-   gcc --version
-   gcc -fopenmp --version
-   ```
-
-4. **Clone Repository & Enter Workspace:**
-   ```bash
-   git clone https://github.com/DivyaKumari29/PGC_LAB02.git
-   cd PGC_LAB02
-   ```
-
----
-
-### Step 1: Run the Sequential Baseline
-
-Measures the single-threaded execution time for $N = 1,000,000,000$ iterations. This number serves as the baseline for all speedup and efficiency calculations.
+To clone and run this experiment locally:
 
 ```bash
-cd performance_analysis
-gcc -O2 sequential.c -o sequential
+# 1. Clone the repository
+git clone https://github.com/DivyaKumari29/PGC_LAB02.git
+
+# 2. Enter repository directory
+cd PGC_LAB02
+
+# 3. Run Sequential Baseline
+gcc -O2 performance_analysis/sequential.c -o sequential
 ./sequential
-cd ..
-```
 
-* **Expected Output:**
-  ```text
-  Result = 499999999500.00
-  Time taken = ~3.346414 seconds
-  ```
-
----
-
-### Step 2: Reproduce Pthreads Scaling Benchmarks
-
-Compile and execute the Pthreads scaling program across varying thread configurations:
-
-```bash
-cd performance_analysis
-gcc -pthread -O2 pthread_perf.c -o pthread_perf
-```
-
-Run the program once for each thread count (enter the number when prompted):
-
-```bash
+# 4. Run Pthreads Benchmark
+gcc -pthread -O2 performance_analysis/pthread_perf.c -o pthread_perf
 ./pthread_perf
-# Input: 1  -> Expected time: ~3.205s (Speedup: ~1.04x)
 
-./pthread_perf
-# Input: 2  -> Expected time: ~1.689s (Speedup: ~1.98x)
+# 5. Run OpenMP Benchmark
+gcc -fopenmp -O2 performance_analysis/omp_perf.c -o omp_perf
+./omp_perf
 
-./pthread_perf
-# Input: 4  -> Expected time: ~0.947s (Speedup: ~3.53x)
-
-./pthread_perf
-# Input: 6  -> Expected time: ~0.850s (Speedup: ~3.93x)
-
-./pthread_perf
-# Input: 16 -> Expected time: ~0.530s (Speedup: ~6.30x)
-
-cd ..
+# 6. Redraw the charts
+python scripts/generate_charts.py
 ```
 
 ---
 
-### Step 3: Reproduce OpenMP Scaling Benchmarks
+## How to Upload to GitHub
 
-Compile and run the OpenMP performance test across the same thread counts:
+1. Go to **github.com** → click **+** → **New repository**.
+2. Give it a name (`PGC_LAB02`) → click **Create repository**.
+3. Click **Add file** → **Upload files**.
+4. Drag in `README.md`, `.gitignore`, and the `images`, `openmp`, `performance_analysis`, `pthreads`, `scripts` folders.
+5. Click **Commit changes**.
 
-```bash
-cd performance_analysis
-gcc -fopenmp -O2 omp_perf.c -o omp_perf
-```
-
-Run the executable for each thread count:
-
-```bash
-./omp_perf
-# Input: 1  -> Expected time: ~3.186s (Speedup: ~1.05x)
-
-./omp_perf
-# Input: 2  -> Expected time: ~1.662s (Speedup: ~2.01x)
-
-./omp_perf
-# Input: 4  -> Expected time: ~0.978s (Speedup: ~3.42x)
-
-./omp_perf
-# Input: 6  -> Expected time: ~0.841s (Speedup: ~3.97x)
-
-./omp_perf
-# Input: 16 -> Expected time: ~0.448s (Speedup: ~7.45x)
-
-cd ..
-```
-
----
-
-### Step 4: Reproduce Race Condition & Synchronization Experiments
-
-#### A. Pthreads Race Condition vs. Mutex
-1. **Observe Lost Updates (Race Condition):**
-   ```bash
-   cd pthreads
-   gcc -pthread race.c -o race
-   ./race
-   ```
-   *Expected:* Output counter is unpredictably less than `400000` (e.g. `278453` or `312890`) due to unsynchronized memory writes.
-
-2. **Verify Correctness via POSIX Mutex:**
-   ```bash
-   gcc -pthread mutex.c -o mutex
-   ./mutex
-   ```
-   *Expected:* Output counter is consistently and correctly `400000`.
-
-3. **Verify Work Sharing & Reduction:**
-   ```bash
-   gcc -pthread thread_sum.c -o thread_sum
-   ./thread_sum
-   cd ..
-   ```
-
-#### B. OpenMP Critical Sections & Barriers
-1. **Observe Race Condition in OpenMP:**
-   ```bash
-   cd openmp
-   gcc -fopenmp omp_race.c -o omp_race
-   ./omp_race
-   ```
-
-2. **Verify Fix with Critical Section:**
-   ```bash
-   gcc -fopenmp omp_critical.c -o omp_critical
-   ./omp_critical
-   ```
-
-3. **Verify Barrier Coordination:**
-   ```bash
-   gcc -fopenmp omp_barrier.c -o omp_barrier
-   ./omp_barrier
-   ```
-   *Expected:* All threads pause at `#pragma omp barrier` and resume synchronously.
-
-4. **Verify Work Sharing with Reduction:**
-   ```bash
-   gcc -fopenmp omp_sum.c -o omp_sum
-   ./omp_sum
-   cd ..
-   ```
-
----
-
-### Step 5: Regenerate Performance Visualization Charts
-
-To redraw all publication-ready graphs with the custom design system:
+Or using Git commands:
 
 ```bash
-# Ensure matplotlib & numpy are installed
-python3 -m pip install matplotlib numpy
-
-# Execute the visualization pipeline
-python3 scripts/generate_charts.py
+git init
+git add .
+git commit -m "Add PGC Lab 02 Pthreads vs OpenMP experiment"
+git branch -M main
+git remote add origin https://github.com/DivyaKumari29/PGC_LAB02.git
+git push -u origin main
 ```
-
-* **Output:**
-  The script automatically regenerates and saves all high-resolution figures directly to `images/`:
-  * `images/performance_comparison_charts.png` (3-panel dashboard)
-  * `images/execution_time_chart.png`
-  * `images/speedup_chart.png`
-  * `images/efficiency_chart.png`
 
 ---
 
